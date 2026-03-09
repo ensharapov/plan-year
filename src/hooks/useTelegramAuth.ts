@@ -12,7 +12,17 @@ interface TelegramUser {
 // Check if running inside Telegram WebView
 export function isTelegramWebApp(): boolean {
   try {
-    return !!(window as any).Telegram?.WebApp?.initData;
+    // 1. Direct object check (if scripts loaded fast enough)
+    if ((window as any).Telegram?.WebApp?.initData) {
+      return true;
+    }
+    // 2. Fallback check: look for tgWebAppStartParam or tgWebAppData in URL
+    // since Telegram injects this before the script finishes evaluating
+    const searchParams = new URLSearchParams(window.location.hash.slice(1) || window.location.search);
+    if (searchParams.has('tgWebAppData') || searchParams.has('tgWebAppStartParam')) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
