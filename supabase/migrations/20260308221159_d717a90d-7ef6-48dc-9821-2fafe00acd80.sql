@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN headlight_reset_hour integer NOT NULL DEFAULT 5;
