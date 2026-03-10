@@ -33,12 +33,22 @@ export function StepDesireDiscovery({ sessionId, onNext, onBack, saving }: Props
         .eq('session_id', sessionId);
 
       if (existing && existing.length > 0) {
-        // Already swiped - show results
+        const swipedKeys = new Set(existing.map(e => e.desire_key));
         const likedKeys = new Set(existing.filter(e => e.liked).map(e => e.desire_key));
+
         setLiked(DESIRE_CARDS.filter(c => likedKeys.has(c.key)));
-        setDone(true);
+
+        if (existing.length >= DESIRE_CARDS.length) {
+          // Already swiped all cards - show results
+          setDone(true);
+        } else {
+          // Resume remaining
+          const remainingCards = DESIRE_CARDS.filter(c => !swipedKeys.has(c.key));
+          const shuffled = [...remainingCards].sort(() => Math.random() - 0.5);
+          setCards(shuffled);
+        }
       } else {
-        // Shuffle cards
+        // Shuffle all cards
         const shuffled = [...DESIRE_CARDS].sort(() => Math.random() - 0.5);
         setCards(shuffled);
       }
@@ -145,8 +155,12 @@ export function StepDesireDiscovery({ sessionId, onNext, onBack, saving }: Props
   }
 
   // Swipe interface
-  const remaining = cards.length - currentIndex;
-  const progress = cards.length > 0 ? ((currentIndex) / cards.length) * 100 : 0;
+  // Swipe interface
+  const totalCards = DESIRE_CARDS.length;
+  const swipedInPast = totalCards - cards.length;
+  const totalSwipedNow = swipedInPast + currentIndex;
+  const remainingCount = totalCards - totalSwipedNow;
+  const progress = totalCards > 0 ? (totalSwipedNow / totalCards) * 100 : 0;
 
   return (
     <motion.div
@@ -168,7 +182,7 @@ export function StepDesireDiscovery({ sessionId, onNext, onBack, saving }: Props
           Что <span className="text-gradient-primary">откликается</span>?
         </h2>
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
-          Не думайте — чувствуйте. Свайп вправо <span className="text-orange-400">🔥</span> только если 
+          Не думайте — чувствуйте. Свайп вправо <span className="text-orange-400">🔥</span> только если
           почувствовали искру в теле. Влево <span className="text-blue-400">🥶</span> — если только «в голове».
         </p>
       </div>
@@ -184,7 +198,7 @@ export function StepDesireDiscovery({ sessionId, onNext, onBack, saving }: Props
         </div>
         <div className="flex justify-between text-xs text-muted-foreground font-body">
           <span>Откликнулось: {liked.length}</span>
-          <span>Осталось: {remaining}</span>
+          <span>Осталось: {remainingCount}</span>
         </div>
       </div>
 
