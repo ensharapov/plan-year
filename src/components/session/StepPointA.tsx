@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,8 +26,22 @@ const energyLabels: Record<number, string> = {
 };
 
 export function StepPointA({ initial, onNext, onBack, saving }: Props) {
-  const [content, setContent] = useState(initial.content);
-  const [energy, setEnergy] = useState(initial.energy_level ?? 5);
+  const [content, setContent] = useState(() => localStorage.getItem('draft_step_pointa_content') || initial.content);
+  const [energy, setEnergy] = useState(() => {
+    const draft = localStorage.getItem('draft_step_pointa_energy');
+    return draft ? Number(draft) : (initial.energy_level ?? 5);
+  });
+
+  useEffect(() => {
+    localStorage.setItem('draft_step_pointa_content', content);
+    localStorage.setItem('draft_step_pointa_energy', energy.toString());
+  }, [content, energy]);
+
+  const handleNext = () => {
+    localStorage.removeItem('draft_step_pointa_content');
+    localStorage.removeItem('draft_step_pointa_energy');
+    onNext(content, energy);
+  };
 
   const canProceed = content.trim().length >= 10;
 
@@ -98,7 +112,7 @@ export function StepPointA({ initial, onNext, onBack, saving }: Props) {
           Назад
         </Button>
         <Button
-          onClick={() => onNext(content, energy)}
+          onClick={handleNext}
           disabled={!canProceed || saving}
           className="gap-2 rounded-xl px-6"
         >

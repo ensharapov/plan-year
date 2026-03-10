@@ -13,12 +13,31 @@ interface Props {
 }
 
 export function StepReframe({ states, onNext, onBack, saving }: Props) {
-  const [reframed, setReframed] = useState<NegativeState[]>(states);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [reframed, setReframed] = useState<NegativeState[]>(() => {
+    const draft = localStorage.getItem('draft_step_reframe_states');
+    if (draft) {
+      try { return JSON.parse(draft); } catch (e) { }
+    }
+    return states.map(s => ({ ...s }));
+  });
+  const [activeIndex, setActiveIndex] = useState(() => {
+    const draftIndex = localStorage.getItem('draft_step_reframe_index');
+    return draftIndex ? Number(draftIndex) : 0;
+  });
 
   useEffect(() => {
-    setReframed(states.map(s => ({ ...s })));
-  }, []);
+    localStorage.setItem('draft_step_reframe_states', JSON.stringify(reframed));
+  }, [reframed]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_step_reframe_index', String(activeIndex));
+  }, [activeIndex]);
+
+  const handleNext = () => {
+    localStorage.removeItem('draft_step_reframe_states');
+    localStorage.removeItem('draft_step_reframe_index');
+    onNext(reframed);
+  };
 
   const current = reframed[activeIndex];
   const allReframed = reframed.every(s => s.reframed_content?.trim());
@@ -60,9 +79,8 @@ export function StepReframe({ states, onNext, onBack, saving }: Props) {
           <button
             key={i}
             onClick={() => setActiveIndex(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === activeIndex ? 'w-8 bg-primary' : reframed[i].reframed_content?.trim() ? 'w-2 bg-primary/40' : 'w-2 bg-muted-foreground/30'
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 ${i === activeIndex ? 'w-8 bg-primary' : reframed[i].reframed_content?.trim() ? 'w-2 bg-primary/40' : 'w-2 bg-muted-foreground/30'
+              }`}
           />
         ))}
       </div>
@@ -136,7 +154,7 @@ export function StepReframe({ states, onNext, onBack, saving }: Props) {
           Назад
         </Button>
         <Button
-          onClick={() => onNext(reframed)}
+          onClick={handleNext}
           disabled={!allReframed || saving}
           className="gap-2 rounded-xl px-6"
         >

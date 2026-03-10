@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, ArrowRight, Skull } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,10 +12,28 @@ interface Props {
 }
 
 export function StepNegativeStates({ initial, onNext, saving }: Props) {
-  const [states, setStates] = useState<NegativeState[]>(
-    initial.length > 0 ? initial : [{ content: '', reframed_content: null, sort_order: 0 }]
-  );
-  const [input, setInput] = useState('');
+  const [states, setStates] = useState<NegativeState[]>(() => {
+    const draft = localStorage.getItem('draft_step_negative_states');
+    if (draft) {
+      try { return JSON.parse(draft); } catch (e) { }
+    }
+    return initial.length > 0 ? initial : [{ content: '', reframed_content: null, sort_order: 0 }];
+  });
+  const [input, setInput] = useState(() => localStorage.getItem('draft_step_negative_input') || '');
+
+  useEffect(() => {
+    localStorage.setItem('draft_step_negative_states', JSON.stringify(states));
+  }, [states]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_step_negative_input', input);
+  }, [input]);
+
+  const handleNext = () => {
+    localStorage.removeItem('draft_step_negative_states');
+    localStorage.removeItem('draft_step_negative_input');
+    onNext(filledStates);
+  };
 
   const addState = () => {
     if (!input.trim()) return;
@@ -51,7 +69,7 @@ export function StepNegativeStates({ initial, onNext, saving }: Props) {
           Чего я <span className="text-destructive">НЕ</span> хочу?
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
-          Выгрузите всё, что вызывает сопротивление. Не фильтруйте — просто пишите. 
+          Выгрузите всё, что вызывает сопротивление. Не фильтруйте — просто пишите.
           Это ваш личный «слив» негатива.
         </p>
       </div>
@@ -111,7 +129,7 @@ export function StepNegativeStates({ initial, onNext, saving }: Props) {
       {/* Next */}
       <div className="flex justify-end pt-4">
         <Button
-          onClick={() => onNext(filledStates)}
+          onClick={handleNext}
           disabled={!canProceed || saving}
           className="gap-2 rounded-xl px-6"
         >

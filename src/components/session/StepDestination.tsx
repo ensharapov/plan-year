@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Compass, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,22 @@ interface Props {
 }
 
 export function StepDestination({ initial, likedDesires = [], onComplete, onBack, saving }: Props) {
-  const [content, setContent] = useState(initial.content);
-  const [resonance, setResonance] = useState(initial.resonance_level ?? 0);
+  const [content, setContent] = useState(() => localStorage.getItem('draft_step_dest_content') || initial.content);
+  const [resonance, setResonance] = useState(() => {
+    const draft = localStorage.getItem('draft_step_dest_resonance');
+    return draft ? Number(draft) : (initial.resonance_level ?? 0);
+  });
+
+  useEffect(() => {
+    localStorage.setItem('draft_step_dest_content', content);
+    localStorage.setItem('draft_step_dest_resonance', resonance.toString());
+  }, [content, resonance]);
+
+  const handleCompleteCall = () => {
+    localStorage.removeItem('draft_step_dest_content');
+    localStorage.removeItem('draft_step_dest_resonance');
+    onComplete(content, resonance);
+  };
 
   const canProceed = content.trim().length >= 10 && resonance > 0;
 
@@ -97,9 +111,8 @@ export function StepDestination({ initial, likedDesires = [], onComplete, onBack
                 className="relative"
               >
                 <Star
-                  className={`h-8 w-8 transition-all duration-300 ${
-                    level <= resonance ? 'text-primary fill-primary' : 'text-muted-foreground/30'
-                  }`}
+                  className={`h-8 w-8 transition-all duration-300 ${level <= resonance ? 'text-primary fill-primary' : 'text-muted-foreground/30'
+                    }`}
                 />
                 {level <= resonance && (
                   <motion.div
@@ -128,7 +141,7 @@ export function StepDestination({ initial, likedDesires = [], onComplete, onBack
           Назад
         </Button>
         <Button
-          onClick={() => onComplete(content, resonance)}
+          onClick={handleCompleteCall}
           disabled={!canProceed || saving}
           className="gap-2 rounded-xl px-6 glow-primary"
         >

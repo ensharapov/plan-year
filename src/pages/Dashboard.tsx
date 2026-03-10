@@ -20,9 +20,14 @@ export default function Dashboard() {
   const { destination, streak, onboardingCompleted, loading: dashLoading } = useDashboardData();
   const { history: energyHistory, loading: historyLoading } = useEnergyHistory();
 
-  const [input, setInput] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const [input, setInput] = useState(() => localStorage.getItem('draft_dashboard_hl_input') || '');
+  const [isEditing, setIsEditing] = useState(() => localStorage.getItem('draft_dashboard_hl_editing') === 'true');
   const [showCelebration, setShowCelebration] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('draft_dashboard_hl_input', input);
+    localStorage.setItem('draft_dashboard_hl_editing', String(isEditing));
+  }, [input, isEditing]);
 
   // Redirect to onboarding if not completed
   useEffect(() => {
@@ -40,6 +45,8 @@ export default function Dashboard() {
   const handleSetHeadlight = async () => {
     if (!input.trim()) return;
     await setTodayHeadlight(input.trim());
+    localStorage.removeItem('draft_dashboard_hl_input');
+    localStorage.removeItem('draft_dashboard_hl_editing');
     setIsEditing(false);
   };
 
@@ -204,7 +211,13 @@ export default function Dashboard() {
                     <div className="flex gap-3">
                       <Button
                         variant="ghost"
-                        onClick={() => { setIsEditing(false); setInput(headlight?.content ?? ''); }}
+                        onClick={() => {
+                          setIsEditing(false);
+                          const content = headlight?.content ?? '';
+                          setInput(content);
+                          localStorage.setItem('draft_dashboard_hl_input', content);
+                          localStorage.setItem('draft_dashboard_hl_editing', 'false');
+                        }}
                         className="flex-1 rounded-xl"
                       >
                         Отмена
