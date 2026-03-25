@@ -111,7 +111,7 @@ export function StepNegativeStates({ initial, onNext, saving }: Props) {
               <span className="flex-1 text-sm text-foreground/90">{state.content}</span>
               <button
                 onClick={() => removeState(index)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                className="opacity-40 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
               >
                 <X className="h-4 w-4" />
               </button>

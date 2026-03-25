@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHeadlights } from '@/hooks/useHeadlights';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useEnergyHistory } from '@/hooks/useEnergyHistory';
-import { Compass, LogOut, Flame, MapPin, Zap, Check, Sparkles, Plus, Skull, Heart } from 'lucide-react';
+import { Compass, LogOut, Flame, MapPin, Zap, Check, Sparkles, Plus, Skull, Heart, ChevronRight, X } from 'lucide-react';
 import { EnergyChart } from '@/components/dashboard/EnergyChart';
 import { EnergyLevel } from '@/components/dashboard/EnergyLevel';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [input, setInput] = useState(() => localStorage.getItem('draft_dashboard_hl_input') || '');
   const [isEditing, setIsEditing] = useState(() => localStorage.getItem('draft_dashboard_hl_editing') === 'true');
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showHint, setShowHint] = useState(() => !localStorage.getItem('dashboard_hint_dismissed'));
 
   useEffect(() => {
     localStorage.setItem('draft_dashboard_hl_input', input);
@@ -120,6 +121,34 @@ export default function Dashboard() {
             Привет, <span className="text-gradient-primary">{displayName}</span>
           </h1>
         </motion.div>
+
+        {/* First-visit hint */}
+        <AnimatePresence>
+          {showHint && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="w-full max-w-lg mb-4"
+            >
+              <div className="rounded-2xl glass p-4 border border-primary/20 relative">
+                <button
+                  onClick={() => {
+                    setShowHint(false);
+                    localStorage.setItem('dashboard_hint_dismissed', '1');
+                  }}
+                  className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <p className="text-sm text-foreground/80 font-body leading-relaxed pr-6">
+                  <span className="text-primary font-medium">Адрес</span> — твоя главная цель на год.{' '}
+                  <span className="text-primary font-medium">Фары</span> — одно конкретное действие сегодня, которое двигает тебя к ней.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Push notification opt-in banner */}
         <NotificationBanner />
@@ -318,7 +347,7 @@ export default function Dashboard() {
               <p className="text-foreground font-body font-medium">Трансформатор</p>
               <p className="text-xs text-muted-foreground font-body">Победи внутреннего монстра</p>
             </div>
-            <Sparkles className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           </button>
         </motion.div>
 
@@ -340,7 +369,7 @@ export default function Dashboard() {
               <p className="text-foreground font-body font-medium">Тренажёр хотелок</p>
               <p className="text-xs text-muted-foreground font-body">Раскачай мышцу желания</p>
             </div>
-            <Flame className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           </button>
         </motion.div>
 
